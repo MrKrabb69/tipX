@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Sets up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Specify the Node.js version you want to use
+
+      # Installs dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Builds your Next.js application
+      - name: Build
+        run: npm run build
+
+      # Optional: Runs tests. Uncomment if you have tests set up
+      # - name: Run tests
+      #   run: npm test
