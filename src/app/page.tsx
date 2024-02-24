@@ -28,7 +28,7 @@ export default function Home() {
               <h3 className="text-lg leading-6 font-medium text-gray-900">Coming Soon!</h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-500">
-                  We're working hard to bring you tipX. Stay updated by joining our mailing list.
+                  We&apos;re working hard to bring you tipX. Stay updated by joining our mailing list.
                 </p>
                 {/* Include an email input and a submit button here */}
                 <button
