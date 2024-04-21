@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "Solana Tipping Extension",
+    "description": "This extension allows you to tip Solana to Twitter users.",
+    "version": "1.0",
+    "icons": {
+        "128": "icons/icon128.png"
+    },
+    "permissions": [
+        "storage",
+        "activeTab",
+        "scripting"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": "icons/icon128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*.twitter.com/*"],
+            "js": ["content.js"]
+        }
+    ]
+}
