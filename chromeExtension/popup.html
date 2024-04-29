@@ -1,0 +1,56 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Send XRP Tip</title>
+</head>
+<body>
+    <h1>Send XRP Tip</h1>
+    <input type="text" id="seedPhrase" placeholder="Enter your seed phrase">
+    <input type="number" id="amount" placeholder="Amount in XRP">
+    <button id="sendTip">Send Tip</button>
+    <script src="popup.js"></script>
+</body>
+</html> -->
+
+<!-- 
+<div id="sendXrpForm" style="display:none;">
+    <h1>Send XRP</h1>
+    <input type="text" id="recipientTwitterUsername" placeholder="Recipient Twitter Username" required>
+    <input type="number" id="xrpAmount" placeholder="Amount XRP" required>
+    <button onclick="sendXRP()">Send XRP</button>
+</div> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>XRP Tipping Extension</title>
+    <style>
+        .hidden { display: none; }
+    </style>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+</head>
+</head>
+<body>
+    <div id="authForm">
+        <h1>Login or Signup</h1>
+        <input type="text" id="username" placeholder="Twitter Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="Login" >Login</button>
+        <button id="Signup">Signup</button>
+    </div>
+
+    <div id="sendXrpForm" class="hidden">
+        <h1>Send XRP</h1>
+        <input type="text" id="recipientTwitterUsername" placeholder="Recipient Twitter Username" required>
+        <input type="number" id="xrpAmount" placeholder="Amount in XRP" required>
+        <button onclick="sendXRP()">Send XRP</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+    <script src="popup.js"></script>
+</body>
+</html>
