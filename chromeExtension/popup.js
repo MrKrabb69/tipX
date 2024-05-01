@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.local.get(['username', 'walletAddress', 'walletSeed'], function(result) {
         if (result.username && result.walletAddress) {
             // Display wallet information if already available
-            alert(result.username)
             getWalletBalance(result.username, result.walletAddress);
 
         } else {
@@ -29,6 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const amount = document.getElementById('amount').value;
         sendXrp(toUsername, amount);
     });
+    
+    document.getElementById('walletAddress').addEventListener('click', function() {
+        copyAddress()
+    });
 
 
 
@@ -51,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             displayWalletInfo(data.walletAddress, null, username);
         })
-        .catch(error => {alert(error.message); console.error('Error creating wallet:', error)});
+        .catch(error => {alert('Error creating wallet'); console.error('Error creating wallet:', error)});
     }
 
     function getWalletBalance(username, walletAdd) {
@@ -64,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             displayWalletInfo(walletAdd, data.balance,username);
         })
-        .catch(error => {alert(error.message); console.error('Error fetching wallet:', error)});
+        .catch(error => {alert('Error fetching wallet'); console.error('Error fetching wallet:', error)});
     }
 
     function displayWalletInfo(walletAddress, balance, username) {
@@ -110,14 +113,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    function copyAddress() {
+        const walletAddress = document.getElementById('walletAddress').textContent;
+        navigator.clipboard.writeText(walletAddress).then(() => {
+            alert('Wallet address copied to clipboard!');
+        }).catch(err => {
+            console.error('Error copying text: ', err);
+        });
+    }
 });
 
 
-function copyAddress() {
-    const walletAddress = document.getElementById('walletAddress').textContent;
-    navigator.clipboard.writeText(walletAddress).then(() => {
-        alert('Wallet address copied to clipboard!');
-    }).catch(err => {
-        console.error('Error copying text: ', err);
-    });
-}
+
