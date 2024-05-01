@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auxilliary functions --------
 
     function createWallet(username) {
-        fetch('http://localhost:3000/createWallet', {
+        fetch('https://tipx.onrender.com/createWallet', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username })
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getWalletBalance(username, walletAdd) {
-        fetch(`http://localhost:3000/wallet/${username}`)
+        fetch(`https://tipx.onrender.com/wallet/${username}`)
         .then(response => response.json())
         .then(data => {
             chrome.storage.local.set({
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fromUsername = result.username;
     
                 // Make the API call to send XRP
-                fetch('http://localhost:3000/sendXrp', {
+                fetch('https://tipx.onrender.com/sendXrp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
