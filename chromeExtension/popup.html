@@ -1,56 +1,150 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Send XRP Tip</title>
-</head>
-<body>
-    <h1>Send XRP Tip</h1>
-    <input type="text" id="seedPhrase" placeholder="Enter your seed phrase">
-    <input type="number" id="amount" placeholder="Amount in XRP">
-    <button id="sendTip">Send Tip</button>
-    <script src="popup.js"></script>
-</body>
-</html> -->
-
-<!-- 
-<div id="sendXrpForm" style="display:none;">
-    <h1>Send XRP</h1>
-    <input type="text" id="recipientTwitterUsername" placeholder="Recipient Twitter Username" required>
-    <input type="number" id="xrpAmount" placeholder="Amount XRP" required>
-    <button onclick="sendXRP()">Send XRP</button>
-</div> -->
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>XRP Tipping Extension</title>
+    <title>XRP Wallet</title>
     <style>
-        .hidden { display: none; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #16222A;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        #walletAddress, #balance {
+            background-color: #1E2F3D;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        button {
+            width: 200px;
+            padding: 10px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #tipForm {
+            display: none;
+            margin-top: 20px;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
     </style>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
 </head>
-</head>
+<!-- <body>
+    <div>Wallet Address: <span id="walletAddress">Loading...</span></div>
+    <div>Balance: <span id="balance">Loading...</span></div>
+    <button id="giveTip">Give Tip</button>
+    <div id="tipForm">
+        Username: <input type="text" id="username"><br>
+        Amount: <input type="number" id="amount"><br>
+        <button id="sendXrp">Send XRP</button>
+    </div>
+    <script src="popup.js"></script>
+</body> -->
+
 <body>
-    <div id="authForm">
-        <h1>Login or Signup</h1>
-        <input type="text" id="username" placeholder="Twitter Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button id="Login" >Login</button>
-        <button id="Signup">Signup</button>
+    <div id="usernameForm" style="display:none;">
+        Username: <input type="text" id="username">
+        <button id="createWallet">Create Wallet</button>
     </div>
-
-    <div id="sendXrpForm" class="hidden">
-        <h1>Send XRP</h1>
-        <input type="text" id="recipientTwitterUsername" placeholder="Recipient Twitter Username" required>
-        <input type="number" id="xrpAmount" placeholder="Amount in XRP" required>
-        <button onclick="sendXRP()">Send XRP</button>
-        <button onclick="logout()">Logout</button>
+    <div id="walletInfo" style="display:none;">
+        <H2 id="storedUsername"></H2>
+  
+        Wallet Address: <span id="walletAddress">Loading...</span><br>
+        Balance: <span id="balance">Loading...</span>
+        <button id="giveTip">Give Tip</button>
     </div>
-
-    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+    <div id="tipForm" style="display:none;">
+        Send to Username: <input type="text" id="toUsername"><br>
+        Amount: <input type="number" id="amount"><br>
+        <button id="sendXrp">Send XRP</button>
+    </div>
     <script src="popup.js"></script>
 </body>
 </html>
+
+
+
+
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>XRP Wallet</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        #usernameForm, #walletInfo, #tipForm {
+            display: none;
+            padding: 20px;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        input[type="text"], input[type="number"] {
+            width: 80%;
+            padding: 8px;
+            margin-top: 10px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Makes sure padding doesn't affect width */
+        }
+        button {
+            width: 80%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .info-text {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="usernameForm">
+        Username: <input type="text" id="username"><br>
+        <button id="createWallet">Create Wallet</button>
+    </div>
+    <div id="walletInfo">
+        Wallet Address: <span id="walletAddress">Loading...</span><br>
+        Balance: <span id="balance">Loading...</span><br>
+        <button id="giveTip">Give Tip</button>
+    </div>
+    <div id="tipForm">
+        Send to Username: <input type="text" id="toUsername"><br>
+        Amount: <input type="number" id="amount"><br>
+        <button id="sendXrp">Send XRP</button>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html> -->

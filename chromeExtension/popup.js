@@ -1,189 +1,123 @@
-// const xrpl = require('xrpl')
-// const axios = require('axios');
-
-
-// async function sendXRP(sender, receiver, amount) {
-//     // Connect to XRP Ledger
-//     const client = new xrpl.Client("wss://s.altnet.rippletest.net:51233")
-//     await client.connect();
-  
-//     // Define sender's wallet from seed
-//     const wallet = xrpl.Wallet.fromSeed(sender);
-//   //   const wallet = xrpl.Wallet.fromSeed("sYourSenderSeedHere");
-  
-//     // Prepare transaction
-//     const preparedTx = await client.autofill({
-//       "TransactionType": "Payment",
-//       "Account": wallet.classicAddress,
-//       "Amount": xrpl.xrpToDrops(amount),  // Convert XRP to drops
-//       "Destination": receiver
-//     });
-  
-//     // Sign the transaction
-//     const signedTx = wallet.sign(preparedTx);
-  
-//     // Submit the transaction
-//     const result = await client.submitAndWait(signedTx.tx_blob);
-    
-//     console.log("Transaction result:", result);
-  
-//     // Disconnect when done
-//     await client.disconnect();
-//   }
-
-// document.getElementById('sendTip').addEventListener('click', async () => {
-//     const seedPhrase = document.getElementById('seedPhrase').value;
-//     const amount = document.getElementById('amount').value;
-//     if (!seedPhrase || !amount) {
-//         alert("Please fill all fields.");
-//         return;
-//     }
-
-//     await sendXRP(seedPhrase, )
-//     // You would need to handle the wallet creation and transaction sending here
-//     console.log(`Sending ${amount} XRP...`);
-// });
-
-
 document.addEventListener('DOMContentLoaded', function() {
-    const authForm = document.getElementById('authForm');
-    const sendXrpForm = document.getElementById('sendXrpForm');
+    // get local address and username
+    chrome.storage.local.get(['username', 'walletAddress', 'walletSeed'], function(result) {
+        if (result.username && result.walletAddress) {
+            // Display wallet information if already available
+            alert(result.username)
+            getWalletBalance(result.username, result.walletAddress);
 
-    console.log({sendXrpForm, authForm})
-
-    function showSendXrpForm() {
-        authForm.classList.add('hidden');
-        sendXrpForm.classList.remove('hidden');
-    }
-
-    function showAuthForm() {
-        authForm.classList.remove('hidden');
-        sendXrpForm.classList.add('hidden');
-    }
-
-    document.getElementById('Login').addEventListener('click', async () => {
-        alert("Login?");
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        try {
-            const response = await fetch('http://localhost:3000/api/users/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            if (!response.ok) throw new Error('Login failed');
-            showSendXrpForm();
-        } catch (error) {
-            alert('Login failed: ' + error.message);
+        } else {
+            // Show username creation form
+            document.getElementById('usernameForm').style.display = 'block';
         }
     });
 
-    // //     const username = document.getElementById('username').value;
-    // //     const password = document.getElementById('password').value;
-    // //     try {
-    // //         const response = await fetch('http://localhost:3000/api/users/login', {
-    // //             method: 'POST',
-    // //             headers: { 'Content-Type': 'application/json' },
-    // //             body: JSON.stringify({ username, password })
-    // //         });
-    // //         if (!response.ok) throw new Error('Login failed');
-    // //         showSendXrpForm();
-    // //     } catch (error) {
-    // //         alert('Login failed: ' + error.message);
-    // //     }
-    // // };
-
-    document.getElementById('Signup').addEventListener('click', async () => {
+    // create address if not present 
+    document.getElementById('createWallet').addEventListener('click', function() {
         const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        try {
-            const response = await fetch('http://localhost:3000/api/users/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+        createWallet(username);
+        // getWalletBalance(username)
+    });
+
+    document.getElementById('giveTip').addEventListener('click', () => {
+        document.getElementById('tipForm').style.display = 'block';
+    });
+
+    // Event listener for sending XRP
+    document.getElementById('sendXrp').addEventListener('click', function() {
+        const toUsername = document.getElementById('toUsername').value.trim();
+        const amount = document.getElementById('amount').value;
+        sendXrp(toUsername, amount);
+    });
+
+
+
+
+
+    // Auxilliary functions --------
+
+    function createWallet(username) {
+        fetch('http://localhost:3000/createWallet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        })
+        .then(response => response.json())
+        .then(data => {
+            chrome.storage.local.set({
+                username: username,
+                walletAddress: data.walletAddress,
+                walletSeed: data.encryptedSeed
             });
-            console.log({response})
-            if (!response.ok) throw new Error('Signup failed');
-            const data = await response.json();
-            console.log('Fetched data:', data.data._doc)
-
-            alert(JSON.stringify(data.data._doc))
-            localStorage.setItem('tipxUser', JSON.stringify(data.data._doc))
-            showSendXrpForm();
-        } catch (error) {
-            alert('Signup failed: ' + error.message);
-        }
-    })
-
-    // document.getElementById('Login').addEventListener('click', async () => {
-    //     const username = document.getElementById('username').value;
-    //     const password = document.getElementById('password').value;
-    //     try {
-    //         const response = await axios.post('http://localhost:3000/api/users/login', {
-    //             username,
-    //             password
-    //         });
-    //         // Store user info in localStorage
-    //         localStorage.setItem('tipxUser', JSON.stringify(response.data));
-    //         showSendXrpForm();
-    //     } catch (error) {
-    //         alert('Login failed: ' + (error.response ? error.response.data.message : error.message));
-    //     }
-    // });
-    
-    // document.getElementById('Signup').addEventListener('click', async () => {
-    //     const username = document.getElementById('username').value;
-    //     const password = document.getElementById('password').value;
-    //     try {
-    //         const response = await axios.post('http://localhost:3000/api/users/signup', {
-    //             username,
-    //             password
-    //         });
-    //         // Assuming the server response includes user data on successful signup
-    //         localStorage.setItem('tipxUser', JSON.stringify(response.data));
-    //         showSendXrpForm();
-    //     } catch (error) {
-    //         alert('Signup failed: ' + (error.response ? error.response.data.message : error.message));
-    //     }
-    // });
-
-    function getUserFromStorage() {
-        const userData = localStorage.getItem('tipxUser');
-        return userData ? JSON.parse(userData) : null;
+            displayWalletInfo(data.walletAddress, null, username);
+        })
+        .catch(error => {alert(error.message); console.error('Error creating wallet:', error)});
     }
-    
 
-    window.sendXRP = async () => {
-        const recipientUsername = document.getElementById('recipientTwitterUsername').value;
-        const amount = document.getElementById('xrpAmount').value;
-        const user = getUserFromStorage();
-    
-        if (!user || !user.token) {
-            alert('You are not logged in');
-            return;
-        }
-    
-        try {
-            // Example: API should require authentication token
-            const response = await axios.post('http://localhost:3000/api/transaction/send', {
-                sender: user.username,
-                receiver: recipientUsername,
-                amount
-            }, {
-                headers: {
-                    Authorization: `Bearer ${user.token}`
-                }
+    function getWalletBalance(username, walletAdd) {
+        fetch(`http://localhost:3000/wallet/${username}`)
+        .then(response => response.json())
+        .then(data => {
+            chrome.storage.local.set({
+                walletBalance: data.balance,
+                walletAddress: data.walletAddress,
             });
-            console.log('Transaction successful:', response.data);
-        } catch (error) {
-            console.error('Failed to send XRP:', (error.response ? error.response.data.message : error.message));
-        }
-    };
+            displayWalletInfo(walletAdd, data.balance,username);
+        })
+        .catch(error => {alert(error.message); console.error('Error fetching wallet:', error)});
+    }
 
-    window.logout = () => {
-        localStorage.removeItem('tipxUser');
-        showAuthForm();
-    };
+    function displayWalletInfo(walletAddress, balance, username) {
+        document.getElementById('walletAddress').textContent = walletAddress;
+        document.getElementById('storedUsername').textContent = username;
+        document.getElementById('walletInfo').style.display = 'block';
+        document.getElementById('usernameForm').style.display = 'none';
+        if(balance){
+            document.getElementById('balance').textContent = `${balance} XRP`;
+        } else {
+            document.getElementById('balance').textContent = `Fund with XRP`;
+        }
+       
+    }
+
+    function sendXrp(toUsername, amount) {
+        // Retrieve sender's username from local storage
+        chrome.storage.local.get(['username'], function(result) {
+            if (result.username) {
+                const fromUsername = result.username;
+    
+                // Make the API call to send XRP
+                fetch('http://localhost:3000/sendXrp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fromUsername: fromUsername,
+                        toUsername: toUsername,
+                        amount: amount
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Transaction successful!');
+                    console.log(data); // Further handling based on your backend response
+                })
+                .catch(error => {
+                    console.error('Error sending XRP:', error);
+                    alert('Transaction failed!');
+                });
+            } else {
+                alert('Sender username not found in storage.');
+            }
+        });
+    }
 });
 
 
+function copyAddress() {
+    const walletAddress = document.getElementById('walletAddress').textContent;
+    navigator.clipboard.writeText(walletAddress).then(() => {
+        alert('Wallet address copied to clipboard!');
+    }).catch(err => {
+        console.error('Error copying text: ', err);
+    });
+}

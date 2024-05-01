@@ -10,7 +10,8 @@
         "activeTab",
         "storage",
         "scripting",
-        "http://localhost:3000/*"
+        "http://localhost:3000/*",
+        "*://*.rippletest.net/*"
     ],
     "background": {
         "service_worker": "background.js"

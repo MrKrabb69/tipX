@@ -1,80 +1,47 @@
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-// const app = express();
-// const port = process.env.PORT || 3001;
 
-// app.use(cors());
-// app.use(express.json());
-
-// const userSchema = new mongoose.Schema({
-//   username: String,
-//   walletAddress: String
-// });
-
-// const User = mongoose.model('User', userSchema);
-
-// // Connect to MongoDB
-// const db = process.env.MONGO_DB_URL;
-
-// mongoose.connect(db, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true
-// });
-
-// // Endpoint to get wallet address by Twitter username
-// app.get('/api/getWallet/:username', async (req, res) => {
-//   try {
-//     const user = await User.findOne({ username: req.params.username });
-//     if (user) {
-//       res.json({ walletAddress: user.walletAddress });
-//     } else {
-//       res.status(404).send('User not found');
-//     }
-//   } catch (error) {
-//     res.status(500).send('Server error');
-//   }
-// });
-
-// app.listen(port, () => {
-//   console.log(`Server running at http://localhost:${port}`);
-// });
-
-// ...... 
-
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bodyParser = require('body-parser');
+const { Wallet, Client, XrplNetwor, xrpToDrops  } = require('xrpl');
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-const User = require('./models/User'); // MongoDB model for Users
-const { Wallet } = require('xrpl');
-require('dotenv').config();
 const cors = require('cors');
 
-
-
 const app = express();
-const port = 3000;
 
 app.use(cors(
-  { origin: '*' }
-));
+    { origin: '*' }
+  ));
 
-app.use(express.json());
+const port = process.env.PORT || 3000;
 
-const db = process.env.MONGO_DB_URL;
+// MongoDB model
+const walletSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  walletAddress: { type: String, required: true },
+  encryptedSeed: { type: String, required: true }
+});
+const WalletModel = mongoose.model('Wallet', walletSchema);
 
-mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true });
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
 
-// const encryptSecret = (secret) => {
-//   const cipher = crypto.createCipher('aes-256-cbc', 'encryption-key');
-//   let encrypted = cipher.update(secret, 'utf8', 'hex');
-//   encrypted += cipher.final('hex');
-//   return encrypted;
-// };
+// Middleware
+app.use(bodyParser.json());
 
-function encryptSecret(secret) {
+// Encrypt function
+// function encrypt(text) {
+//   const cipher = crypto.createCipher('aes-256-ctr', process.env.SECRET_KEY);
+//   let crypted = cipher.update(text, 'utf8', 'hex');
+//   crypted += cipher.final('hex');
+//   return crypted;
+// }
+
+function encrypt(secret) {
   const algorithm = 'aes-256-cbc';
   const key = crypto.randomBytes(32);  // 256 bits key
   const iv = crypto.randomBytes(16);   // 16 bytes IV for AES
@@ -89,51 +56,127 @@ function encryptSecret(secret) {
   };
 }
 
+// Decrypt function
+// function decrypt(text) {
+//   const decipher = crypto.createDecipher('aes-256-ctr', process.env.SECRET_KEY);
+//   let dec = decipher.update(text, 'hex', 'utf8');
+//   dec += decipher.final('utf8');
+//   return dec;
+// }
 
-app.post('/api/users/signup', async (req, res) => {
-    console.log("enters signup")
-    const { username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    try {
-        // Create a new wallet
-        const newWallet = Wallet.generate();
-        const encryptedSecret = encryptSecret(newWallet.seed);
+function decrypt(text) {
+    const {encryptedData, iv, key} = JSON.parse(text)
+    const algorithm = 'aes-256-cbc';
+    
+    // Convert hexadecimal string back to binary data
+    const keyH = Buffer.from(key, 'hex');
+    const ivH = Buffer.from(iv, 'hex');
+  
+    const decipher = crypto.createDecipheriv(algorithm, keyH, ivH);
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');  // Output as utf8 to match the input encoding
+    return decrypted;
+  }
 
-        const newUser = new User({ 
-          username, 
-          password: hashedPassword, 
-          walletAddress: newWallet.classicAddress,
-          encryptedSecret: JSON.stringify(encryptedSecret)
-        });
+// XRPL Client
+const client = new Client('wss://s.altnet.rippletest.net:51233'); 
 
-       resul = await newUser.save();
-       console.log({resul})
-       const { password, ...d} = resul;
-        res.status(201).json({ message: 'User registered successfully', data: d});
-    } catch (error) {
-        console.log("Error", error.message);
-        res.status(500).send('Error registering new user');
-    }
+// Create a new wallet and store in database
+app.post('/createWallet', async (req, res) => {
+    console.log('enters create');
+  try {
+    await client.connect();
+    const newWallet = Wallet.generate();
+    const encryptedSeed = encrypt(newWallet.seed);
+
+    const wallet = new WalletModel({
+      username: req.body.username,
+      walletAddress: newWallet.classicAddress,
+      encryptedSeed: JSON.stringify(encryptedSeed)
+    });
+
+    await wallet.save();
+    console.log('no errors');
+    res.json({
+      walletAddress: newWallet.classicAddress,
+      message: "Wallet created successfully"
+    });
+  } catch (error) {
+    res.status(500).send("Error creating wallet");
+  } finally {
+    await client.disconnect();
+  }
 });
 
-app.post('/api/users/login', async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (!user || !await bcrypt.compare(password, user.password)) {
-        return res.status(401).send({ message: 'Authentication failed' });
+// Fetch wallet info including balance
+app.get('/wallet/:username', async (req, res) => {
+    console.log('enters the username bal');
+  try {
+    const wallet = await WalletModel.findOne({ username: req.params.username });
+    if (!wallet) {
+      return res.status(404).json({"error": "Wallet not found"});
     }
-    const token = jwt.sign({ userId: user._id }, 'hzR+LhT52k402KT/xmChtpIKbwE4tJaHoW2ce0dOobA=');
-    res.send({ message: 'Login successful', user: { username: user.username, walletAddress: user.walletAddress }, token });
+
+    await client.connect();
+    const account_info = await client.request({
+      command: 'account_info',
+      account: wallet.walletAddress,
+      ledger_index: 'validated'
+    });
+    res.json({
+      walletAddress: wallet.walletAddress,
+      balance: account_info.result.account_data.Balance
+    });
+  } catch (error) {
+    console.log(error.message);
+    if(error.message == "Account not found."){
+        res.json({
+            balance: 0
+          }); 
+    } else{
+        res.status(500).send("Error fetching wallet info");
+    }
+  } finally {
+    await client.disconnect();
+  }
 });
 
-app.get('/api/users/get-wallet/:twitterUsername', async (req, res) => {
-    const { twitterUsername } = req.params;
-    const user = await User.findOne({ username: twitterUsername });
-    if (user) {
-        res.json({ walletAddress: user.walletAddress });
-    } else {
-        res.status(404).send('User not found');
+// Send XRP transaction
+app.post('/sendXrp', async (req, res) => {
+  try {
+    const { fromUsername, toUsername, amount } = req.body;
+
+    const senderWallet = await WalletModel.findOne({ username: fromUsername });
+    const receiverWallet = await WalletModel.findOne({ username: toUsername });
+
+    if (!senderWallet || !receiverWallet) {
+      return res.status(404).send("Wallet not found");
     }
+
+    const senderSeed = decrypt(senderWallet.encryptedSeed);
+    const sender = Wallet.fromSeed(senderSeed);
+
+    await client.connect();
+    const preparedTx = await client.autofill({
+      TransactionType: "Payment",
+      Account: sender.classicAddress,
+      Amount: xrpToDrops(amount), // Convert XRP to drops
+      Destination: receiverWallet.walletAddress
+    });
+
+    const signed = sender.sign(preparedTx);
+    const result = await client.submitAndWait(signed.tx_blob);
+    
+    res.json({ result: result, message: "Transaction successful" });
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).send("Error during transaction");
+  } finally {
+    await client.disconnect();
+  }
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
