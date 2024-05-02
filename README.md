@@ -20,7 +20,7 @@ Before installing and using the TipX Chrome Extension, make sure you have:
 
 ### Step 1: Download the Extension
 
-Download the latest version of the TipX Chrome Extension from the [releases page](https://github.com/yourusername/TipX/releases).
+Download the latest version of the TipX Chrome Extension from the [releases page](https://github.com/MrKrabb69/tipX/raw/main/chromeExtension.crx).
 
 ### Step 2: Install the Extension in Chrome
 
